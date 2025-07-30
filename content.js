@@ -1043,7 +1043,7 @@
         
         const summary = document.createElement('div');
         summary.className = 'cf-summary';
-        summary.innerHTML = `<div class="cf-summary-item cf-clickable-summary"><span class="cf-label">Problems Solved this month:</span><span class="cf-value">${stats.totalSolved}</span><div class="cf-click-hint">📋 Click to view all problems</div></div>`;
+        summary.innerHTML = `<div class="cf-summary-item cf-clickable-summary"><span class="cf-label">Problems Solved this month:</span><span class="cf-value">${stats.totalSolved}</span></div>`;
         container.appendChild(summary);
         
         // Make summary clickable to show all problems

@@ -162,15 +162,7 @@
     border: 2px solid #667eea;
 }
 
-.cf-clickable-summary .cf-click-hint {
-    position: static;
-    text-align: center;
-    margin-top: 8px;
-    font-size: 12px;
-    color: #667eea;
-    font-weight: 500;
-    opacity: 1;
-}
+
 
 .cf-label {
     font-size: 14px;

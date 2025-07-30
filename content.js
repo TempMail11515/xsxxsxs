@@ -674,18 +674,17 @@
             </div>
         `;
         
-        // Add event listener after content is created
-        setTimeout(() => {
-            const closeBtn = document.getElementById('cf-topic-close-btn');
-            if (closeBtn) {
-                closeBtn.addEventListener('click', () => {
-                    closeTopicDetails();
-                });
-            }
-        }, 100);
-        
+        // Create modal and add event listener
         const modal = createTopicDetailsModal(`📊 ${topic} - Detailed Statistics`, content);
         document.body.appendChild(modal);
+        
+        // Add event listener after modal is added to DOM
+        const closeBtn = document.getElementById('cf-topic-close-btn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                closeTopicDetails();
+            });
+        }
     }
 
     // Close topic details modal and return to analytics
@@ -1297,7 +1296,7 @@
         const modal = document.createElement('div');
         modal.className = 'cf-modal cf-topic-details-modal';
         const header = document.createElement('div');
-        header.className = 'cf-modal-header';
+        header.className = 'cf-modal-header cf-topic-details-header';
         header.innerHTML = `<h2>${title}</h2><button class="cf-close-btn" onclick="this.closest('.cf-modal-overlay').remove()">×</button>`;
         const body = document.createElement('div');
         body.className = 'cf-modal-body cf-topic-details-body';

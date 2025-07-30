@@ -499,6 +499,8 @@
     function displayAnalyticsModal(stats, user) {
         const existingModal = document.querySelector('.cf-modal-overlay');
         if (existingModal) document.body.removeChild(existingModal);
+        // Store current stats for topic details
+        window.currentAnalyticsStats = stats;
         const modal = createModal(`📊 Analytics for ${user}`, createAnalyticsContent(stats));
         document.body.appendChild(modal);
     }
@@ -594,7 +596,7 @@
                 </div>
                 <div class="cf-progress-bar"><div class="cf-progress-fill" style="width: 0%; animation-delay: ${index * 50 + 300}ms"></div></div>
             `;
-            topicCard.addEventListener('click', () => showTopicDetails(topic));
+            topicCard.addEventListener('click', () => showTopicDetails(topic.name));
             container.appendChild(topicCard);
             setTimeout(() => { topicCard.querySelector('.cf-progress-fill').style.width = `${percentage}%`; }, index * 50 + 500);
         });
@@ -625,8 +627,72 @@
     }
     
     function showTopicDetails(topic) {
-        // This function is correct and doesn't need changes.
+        // Get topic data from current stats
+        const currentStats = window.currentAnalyticsStats;
+        if (!currentStats || !currentStats.topicStats[topic]) {
+            return;
+        }
+        
+        const topicData = currentStats.topicStats[topic];
+        const user = getCurrentPageUser();
+        
+        // Create detailed statistics modal
+        const existingModal = document.querySelector('.cf-modal-overlay');
+        if (existingModal) existingModal.remove();
+        
+        const content = document.createElement('div');
+        content.className = 'cf-topic-details-content';
+        
+        // Calculate statistics
+        const problemsSolved = topicData.solved;
+        const totalProblems = topicData.problemCount;
+        const completionRate = totalProblems > 0 ? Math.round((problemsSolved / totalProblems) * 100) : 0;
+        const accuracy = topicData.accuracy;
+        const problemsAttempted = topicData.attempted;
+        
+        content.innerHTML = `
+            <div class="cf-topic-details-stats">
+                <div class="cf-topic-stat-item">
+                    <span class="cf-topic-stat-label">Problems Solved:</span>
+                    <span class="cf-topic-stat-value">${problemsSolved} / ${totalProblems}</span>
+                </div>
+                <div class="cf-topic-stat-item">
+                    <span class="cf-topic-stat-label">Completion Rate:</span>
+                    <span class="cf-topic-stat-value">${completionRate}%</span>
+                </div>
+                <div class="cf-topic-stat-item">
+                    <span class="cf-topic-stat-label">Accuracy:</span>
+                    <span class="cf-topic-stat-value">${accuracy}%</span>
+                </div>
+                <div class="cf-topic-stat-item">
+                    <span class="cf-topic-stat-label">Problems Attempted:</span>
+                    <span class="cf-topic-stat-value">${problemsAttempted}</span>
+                </div>
+            </div>
+            <div class="cf-topic-details-actions">
+                <button class="cf-topic-close-btn" onclick="closeTopicDetails()">Close</button>
+            </div>
+        `;
+        
+        const modal = createModal(`📊 ${topic} - Detailed Statistics`, content);
+        document.body.appendChild(modal);
     }
+
+    // Close topic details modal and return to analytics
+    function closeTopicDetails() {
+        const existingModal = document.querySelector('.cf-modal-overlay');
+        if (existingModal) existingModal.remove();
+        
+        // Return to analytics modal if we have stored stats
+        const currentStats = window.currentAnalyticsStats;
+        const user = getCurrentPageUser();
+        if (currentStats && user) {
+            displayAnalyticsModal(currentStats, user);
+        }
+    }
+    
+    // Make closeTopicDetails globally accessible
+    window.closeTopicDetails = closeTopicDetails;
 
     function showUnsolvedTopicInfo(topic) {
         // This function is correct and doesn't need changes.

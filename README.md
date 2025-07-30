@@ -9,6 +9,7 @@ A powerful browser extension that provides comprehensive analytics for Codeforce
 - **Problem Distribution**: Visual breakdown of solved vs available problems by topic
 - **First Attempt Success**: Track problems solved on first try
 - **Real-time Data**: Problem counts fetched live from Codeforces API
+- **Detailed Topic Statistics**: Click on any topic card to view detailed statistics including completion rate, accuracy, and problems attempted
 
 ### 🏆 Contest Progress
 - **Rating History**: Interactive chart showing rating progression over time
@@ -82,6 +83,7 @@ Then load the ZIP file through Chrome's extension management page.
    - **Solved vs Total**: Compares your solved problems to total available problems
    - **Topic Distribution**: Pie chart showing your problem-solving distribution
    - **Rating Progress**: Line chart of your contest rating over time
+   - **Topic Details**: Click on any topic card to view detailed statistics including completion rate, accuracy, and problems attempted
 
 ### Understanding the Data
 

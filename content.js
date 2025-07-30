@@ -472,6 +472,8 @@
             });
         });
 
+
+
         Object.keys(topicStats).forEach(t => {
             const s = topicStats[t];
             if (s.attempted > 0) s.accuracy = Math.round((s.solved / s.attempted) * 100);
@@ -499,8 +501,12 @@
     function displayAnalyticsModal(stats, user) {
         const existingModal = document.querySelector('.cf-modal-overlay');
         if (existingModal) document.body.removeChild(existingModal);
+        // Store current stats for topic details
+        window.currentAnalyticsStats = stats;
         const modal = createModal(`📊 Analytics for ${user}`, createAnalyticsContent(stats));
         document.body.appendChild(modal);
+        // Store analytics modal reference
+        analyticsModalOverlay = modal;
     }
 
     // Display contest modal
@@ -594,7 +600,7 @@
                 </div>
                 <div class="cf-progress-bar"><div class="cf-progress-fill" style="width: 0%; animation-delay: ${index * 50 + 300}ms"></div></div>
             `;
-            topicCard.addEventListener('click', () => showTopicDetails(topic));
+            topicCard.addEventListener('click', () => showTopicDetails(topic.name));
             container.appendChild(topicCard);
             setTimeout(() => { topicCard.querySelector('.cf-progress-fill').style.width = `${percentage}%`; }, index * 50 + 500);
         });
@@ -614,7 +620,8 @@
             tag.className = 'cf-unsolved-tag';
             tag.textContent = topic;
             tag.style.animationDelay = `${index * 30}ms`;
-            tag.addEventListener('click', () => showUnsolvedTopicInfo(topic));
+            tag.addEventListener('click', () => showUnsolvedTopicDetails(topic));
+            tag.style.cursor = 'pointer';
             tagsContainer.appendChild(tag);
         });
         container.appendChild(tagsContainer);
@@ -625,7 +632,190 @@
     }
     
     function showTopicDetails(topic) {
-        // This function is correct and doesn't need changes.
+        // Get topic data from current stats
+        const currentStats = window.currentAnalyticsStats;
+        if (!currentStats || !currentStats.topicStats[topic]) {
+            return;
+        }
+        
+        const topicData = currentStats.topicStats[topic];
+        const user = getCurrentPageUser();
+        
+        // Create detailed statistics modal over the analytics modal
+        const content = document.createElement('div');
+        content.className = 'cf-topic-details-content';
+        
+        // Calculate statistics
+        const problemsSolved = topicData.solved;
+        const totalProblems = topicData.problemCount;
+        const completionRate = totalProblems > 0 ? Math.round((problemsSolved / totalProblems) * 100) : 0;
+        const accuracy = topicData.accuracy;
+        const problemsAttempted = topicData.attempted;
+        
+        content.innerHTML = `
+            <div class="cf-topic-details-stats">
+                <div class="cf-topic-stat-item">
+                    <span class="cf-topic-stat-label">Problems Solved:</span>
+                    <span class="cf-topic-stat-value">${problemsSolved} / ${totalProblems}</span>
+                </div>
+                <div class="cf-topic-stat-item">
+                    <span class="cf-topic-stat-label">Completion Rate:</span>
+                    <span class="cf-topic-stat-value">${completionRate}%</span>
+                </div>
+                <div class="cf-topic-stat-item">
+                    <span class="cf-topic-stat-label">Accuracy:</span>
+                    <span class="cf-topic-stat-value">${accuracy}%</span>
+                </div>
+                <div class="cf-topic-stat-item">
+                    <span class="cf-topic-stat-label">Problems Attempted:</span>
+                    <span class="cf-topic-stat-value">${problemsAttempted}</span>
+                </div>
+            </div>
+            <div class="cf-topic-details-actions">
+                <button class="cf-topic-close-btn" id="cf-topic-close-btn">Close</button>
+            </div>
+        `;
+        
+        // Create topic details modal over the analytics modal
+        const topicModal = createTopicDetailsModal(`📊 ${topic} - Detailed Statistics`, content);
+        document.body.appendChild(topicModal);
+        
+        // Add event listener after modal is added to DOM
+        const closeBtn = document.getElementById('cf-topic-close-btn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                closeTopicDetails();
+            });
+        }
+    }
+
+    // Close topic details modal and return to analytics
+    function closeTopicDetails() {
+        // Remove only the topic details modal (the last modal overlay)
+        const modalOverlays = document.querySelectorAll('.cf-modal-overlay');
+        if (modalOverlays.length > 0) {
+            const lastModal = modalOverlays[modalOverlays.length - 1];
+            lastModal.remove();
+        }
+    }
+    
+    // Store analytics modal reference for topic details
+    let analyticsModalOverlay = null;
+    
+    // Show solved problems details modal
+    function showSolvedProblemsDetails(name, problems, type) {
+        const content = document.createElement('div');
+        content.className = 'cf-solved-problems-details-content';
+        
+        const title = type === 'topic' ? `${name} - Solved Problems` : `Rating ${name} - Solved Problems`;
+        
+        content.innerHTML = `
+            <div class="cf-solved-problems-details-stats">
+                <div class="cf-solved-problems-stat-item">
+                    <span class="cf-solved-problems-stat-label">Problems Solved:</span>
+                    <span class="cf-solved-problems-stat-value">${problems.length}</span>
+                </div>
+            </div>
+            <div class="cf-solved-problems-list">
+                ${problems.map(problem => `
+                    <div class="cf-solved-problem-item">
+                        <a href="${problem.url}" target="_blank" class="cf-solved-problem-link">
+                            ${problem.contestId}${problem.index} - ${problem.name}
+                        </a>
+                        ${problem.rating ? `<span class="cf-solved-problem-rating">${problem.rating}</span>` : ''}
+                    </div>
+                `).join('')}
+            </div>
+            <div class="cf-solved-problems-details-actions">
+                <button class="cf-solved-problems-close-btn" id="cf-solved-problems-close-btn">Close</button>
+            </div>
+        `;
+        
+        // Create modal and add event listener
+        const modal = createTopicDetailsModal(`📋 ${title}`, content);
+        document.body.appendChild(modal);
+        
+        // Add event listener after modal is added to DOM
+        const closeBtn = document.getElementById('cf-solved-problems-close-btn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                closeSolvedProblemsDetails();
+            });
+        }
+    }
+    
+    // Close solved problems details modal
+    function closeSolvedProblemsDetails() {
+        // Remove only the solved problems details modal (the last modal overlay)
+        const modalOverlays = document.querySelectorAll('.cf-modal-overlay');
+        if (modalOverlays.length > 0) {
+            const lastModal = modalOverlays[modalOverlays.length - 1];
+            lastModal.remove();
+        }
+    }
+    
+    // Make closeTopicDetails globally accessible
+    window.closeTopicDetails = closeTopicDetails;
+    
+    // Also make createTopicDetailsModal globally accessible
+    window.createTopicDetailsModal = createTopicDetailsModal;
+
+    function showUnsolvedTopicDetails(topic) {
+        // Get topic data from current stats
+        const currentStats = window.currentAnalyticsStats;
+        if (!currentStats) {
+            return;
+        }
+        
+        const topicData = currentStats.topicStats[topic] || { solved: 0, problemCount: TOPIC_PROBLEM_COUNTS[topic] || 0, attempted: 0, accuracy: 0 };
+        const user = getCurrentPageUser();
+        
+        // Create detailed statistics modal for unsolved topic
+        const content = document.createElement('div');
+        content.className = 'cf-topic-details-content';
+        
+        // Calculate statistics
+        const problemsSolved = topicData.solved;
+        const totalProblems = topicData.problemCount;
+        const completionRate = totalProblems > 0 ? Math.round((problemsSolved / totalProblems) * 100) : 0;
+        const accuracy = topicData.accuracy;
+        const problemsAttempted = topicData.attempted;
+        
+        content.innerHTML = `
+            <div class="cf-topic-details-stats">
+                <div class="cf-topic-stat-item">
+                    <span class="cf-topic-stat-label">Problems Solved:</span>
+                    <span class="cf-topic-stat-value">${problemsSolved} / ${totalProblems}</span>
+                </div>
+                <div class="cf-topic-stat-item">
+                    <span class="cf-topic-stat-label">Completion Rate:</span>
+                    <span class="cf-topic-stat-value">${completionRate}%</span>
+                </div>
+                <div class="cf-topic-stat-item">
+                    <span class="cf-topic-stat-label">Accuracy:</span>
+                    <span class="cf-topic-stat-value">${accuracy}%</span>
+                </div>
+                <div class="cf-topic-stat-item">
+                    <span class="cf-topic-stat-label">Problems Attempted:</span>
+                    <span class="cf-topic-stat-value">${problemsAttempted}</span>
+                </div>
+            </div>
+            <div class="cf-topic-details-actions">
+                <button class="cf-topic-close-btn" id="cf-topic-close-btn">Close</button>
+            </div>
+        `;
+        
+        // Create topic details modal over the analytics modal
+        const topicModal = createTopicDetailsModal(`📊 ${topic} - Detailed Statistics`, content);
+        document.body.appendChild(topicModal);
+        
+        // Add event listener after modal is added to DOM
+        const closeBtn = document.getElementById('cf-topic-close-btn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                closeTopicDetails();
+            });
+        }
     }
 
     function showUnsolvedTopicInfo(topic) {
@@ -912,8 +1102,41 @@
         
         const summary = document.createElement('div');
         summary.className = 'cf-summary';
-        summary.innerHTML = `<div class="cf-summary-item"><span class="cf-label">Problems Solved this month:</span><span class="cf-value">${stats.totalSolved}</span></div>`;
+        summary.innerHTML = `<div class="cf-summary-item cf-clickable-summary"><span class="cf-label">Problems Solved this month:</span><span class="cf-value">${stats.totalSolved}</span></div>`;
         container.appendChild(summary);
+        
+        // Make summary clickable to show all problems
+        const summaryItem = summary.querySelector('.cf-summary-item');
+        if (summaryItem) {
+            summaryItem.addEventListener('click', () => {
+                // Collect all problems from all topics and ratings
+                const allProblems = [];
+                Object.values(stats.topicStats).forEach(topicData => {
+                    if (topicData.problems) {
+                        allProblems.push(...topicData.problems);
+                    }
+                });
+                Object.values(stats.ratingStats).forEach(ratingData => {
+                    if (ratingData.problems) {
+                        allProblems.push(...ratingData.problems);
+                    }
+                });
+                
+                // Remove duplicates based on contest ID and index
+                const uniqueProblems = [];
+                const seen = new Set();
+                allProblems.forEach(problem => {
+                    const key = `${problem.contestId}-${problem.index}`;
+                    if (!seen.has(key)) {
+                        seen.add(key);
+                        uniqueProblems.push(problem);
+                    }
+                });
+                
+                showSolvedProblemsDetails('All Problems', uniqueProblems, 'month');
+            });
+            summaryItem.style.cursor = 'pointer';
+        }
 
 
 
@@ -967,6 +1190,10 @@
                 </div>
             `;
             
+            // Make topic card clickable
+            topicCard.addEventListener('click', () => showSolvedProblemsDetails(topicName, topicData.problems, 'topic'));
+            topicCard.style.cursor = 'pointer';
+            
             container.appendChild(topicCard);
         });
     }
@@ -997,6 +1224,10 @@
                     <div class="cf-stat"><span class="cf-stat-label">Solved:</span><span class="cf-stat-value">${ratingData.count}</span></div>
                 </div>
             `;
+            
+            // Make rating card clickable
+            ratingCard.addEventListener('click', () => showSolvedProblemsDetails(rating, ratingData.problems, 'rating'));
+            ratingCard.style.cursor = 'pointer';
             
             container.appendChild(ratingCard);
         });
@@ -1201,6 +1432,27 @@
         header.innerHTML = `<h2>${title}</h2><button class="cf-close-btn" onclick="this.closest('.cf-modal-overlay').remove()">×</button>`;
         const body = document.createElement('div');
         body.className = 'cf-modal-body';
+        body.appendChild(content);
+        modal.appendChild(header);
+        modal.appendChild(body);
+        overlay.appendChild(modal);
+        return overlay;
+    }
+
+    // Create compact topic details modal
+    function createTopicDetailsModal(title, content) {
+        const overlay = document.createElement('div');
+        overlay.className = 'cf-modal-overlay';
+        overlay.onclick = (e) => {
+            if (e.target === overlay) document.body.removeChild(overlay);
+        };
+        const modal = document.createElement('div');
+        modal.className = 'cf-modal cf-topic-details-modal';
+        const header = document.createElement('div');
+        header.className = 'cf-modal-header cf-topic-details-header';
+        header.innerHTML = `<h2>${title}</h2><button class="cf-close-btn" onclick="this.closest('.cf-modal-overlay').remove()">×</button>`;
+        const body = document.createElement('div');
+        body.className = 'cf-modal-body cf-topic-details-body';
         body.appendChild(content);
         modal.appendChild(header);
         modal.appendChild(body);

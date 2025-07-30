@@ -503,6 +503,8 @@
         window.currentAnalyticsStats = stats;
         const modal = createModal(`📊 Analytics for ${user}`, createAnalyticsContent(stats));
         document.body.appendChild(modal);
+        // Store analytics modal reference
+        analyticsModalOverlay = modal;
     }
 
     // Display contest modal
@@ -636,10 +638,7 @@
         const topicData = currentStats.topicStats[topic];
         const user = getCurrentPageUser();
         
-        // Create detailed statistics modal
-        const existingModal = document.querySelector('.cf-modal-overlay');
-        if (existingModal) existingModal.remove();
-        
+        // Create detailed statistics modal over the analytics modal
         const content = document.createElement('div');
         content.className = 'cf-topic-details-content';
         
@@ -674,9 +673,9 @@
             </div>
         `;
         
-        // Create modal and add event listener
-        const modal = createTopicDetailsModal(`📊 ${topic} - Detailed Statistics`, content);
-        document.body.appendChild(modal);
+        // Create topic details modal over the analytics modal
+        const topicModal = createTopicDetailsModal(`📊 ${topic} - Detailed Statistics`, content);
+        document.body.appendChild(topicModal);
         
         // Add event listener after modal is added to DOM
         const closeBtn = document.getElementById('cf-topic-close-btn');
@@ -689,16 +688,16 @@
 
     // Close topic details modal and return to analytics
     function closeTopicDetails() {
-        const existingModal = document.querySelector('.cf-modal-overlay');
-        if (existingModal) existingModal.remove();
-        
-        // Return to analytics modal if we have stored stats
-        const currentStats = window.currentAnalyticsStats;
-        const user = getCurrentPageUser();
-        if (currentStats && user) {
-            displayAnalyticsModal(currentStats, user);
+        // Remove only the topic details modal (the last modal overlay)
+        const modalOverlays = document.querySelectorAll('.cf-modal-overlay');
+        if (modalOverlays.length > 0) {
+            const lastModal = modalOverlays[modalOverlays.length - 1];
+            lastModal.remove();
         }
     }
+    
+    // Store analytics modal reference for topic details
+    let analyticsModalOverlay = null;
     
     // Make closeTopicDetails globally accessible
     window.closeTopicDetails = closeTopicDetails;

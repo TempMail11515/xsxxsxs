@@ -960,6 +960,7 @@
     max-width: 400px !important;
     width: auto !important;
     min-width: 350px;
+    z-index: 10001 !important;
 }
 
 .cf-topic-details-body {
@@ -970,6 +971,7 @@
 .cf-modal-overlay {
     background: rgba(0, 0, 0, 0.5) !important;
     backdrop-filter: blur(3px);
+    z-index: 10000 !important;
 }
 
 /* Compact header for topic details */

@@ -670,11 +670,21 @@
                 </div>
             </div>
             <div class="cf-topic-details-actions">
-                <button class="cf-topic-close-btn" onclick="closeTopicDetails()">Close</button>
+                <button class="cf-topic-close-btn" id="cf-topic-close-btn">Close</button>
             </div>
         `;
         
-        const modal = createModal(`📊 ${topic} - Detailed Statistics`, content);
+        // Add event listener after content is created
+        setTimeout(() => {
+            const closeBtn = document.getElementById('cf-topic-close-btn');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    closeTopicDetails();
+                });
+            }
+        }, 100);
+        
+        const modal = createTopicDetailsModal(`📊 ${topic} - Detailed Statistics`, content);
         document.body.appendChild(modal);
     }
 
@@ -693,6 +703,9 @@
     
     // Make closeTopicDetails globally accessible
     window.closeTopicDetails = closeTopicDetails;
+    
+    // Also make createTopicDetailsModal globally accessible
+    window.createTopicDetailsModal = createTopicDetailsModal;
 
     function showUnsolvedTopicInfo(topic) {
         // This function is correct and doesn't need changes.
@@ -1267,6 +1280,27 @@
         header.innerHTML = `<h2>${title}</h2><button class="cf-close-btn" onclick="this.closest('.cf-modal-overlay').remove()">×</button>`;
         const body = document.createElement('div');
         body.className = 'cf-modal-body';
+        body.appendChild(content);
+        modal.appendChild(header);
+        modal.appendChild(body);
+        overlay.appendChild(modal);
+        return overlay;
+    }
+
+    // Create compact topic details modal
+    function createTopicDetailsModal(title, content) {
+        const overlay = document.createElement('div');
+        overlay.className = 'cf-modal-overlay';
+        overlay.onclick = (e) => {
+            if (e.target === overlay) document.body.removeChild(overlay);
+        };
+        const modal = document.createElement('div');
+        modal.className = 'cf-modal cf-topic-details-modal';
+        const header = document.createElement('div');
+        header.className = 'cf-modal-header';
+        header.innerHTML = `<h2>${title}</h2><button class="cf-close-btn" onclick="this.closest('.cf-modal-overlay').remove()">×</button>`;
+        const body = document.createElement('div');
+        body.className = 'cf-modal-body cf-topic-details-body';
         body.appendChild(content);
         modal.appendChild(header);
         modal.appendChild(body);

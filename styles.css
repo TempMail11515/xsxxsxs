@@ -150,6 +150,28 @@
     transform: translateY(-2px);
 }
 
+.cf-clickable-summary {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.cf-clickable-summary:hover {
+    background: linear-gradient(135deg, #e8f0fe 0%, #b8d4f0 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.2);
+    border: 2px solid #667eea;
+}
+
+.cf-clickable-summary .cf-click-hint {
+    position: static;
+    text-align: center;
+    margin-top: 8px;
+    font-size: 12px;
+    color: #667eea;
+    font-weight: 500;
+    opacity: 1;
+}
+
 .cf-label {
     font-size: 14px;
     color: #666;

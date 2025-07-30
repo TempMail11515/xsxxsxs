@@ -442,7 +442,7 @@
         const solvedProblems = new Set();
         
         ALL_TOPICS.forEach(topic => {
-            topicStats[topic] = { attempted: 0, solved: 0, firstAttemptSolved: 0, accuracy: 0, problemCount: TOPIC_PROBLEM_COUNTS[topic] || 0, problems: [] };
+            topicStats[topic] = { attempted: 0, solved: 0, firstAttemptSolved: 0, accuracy: 0, problemCount: TOPIC_PROBLEM_COUNTS[topic] || 0 };
         });
 
         if (!submissions || submissions.length === 0) {
@@ -472,26 +472,7 @@
             });
         });
 
-        // Store problem details for solved problems
-        submissions.forEach(sub => {
-            if (sub.verdict === 'OK') {
-                const key = `${sub.problem.contestId}-${sub.problem.index}`;
-                if (!solvedProblems.has(key)) {
-                    solvedProblems.add(key);
-                    (sub.problem.tags || []).forEach(tag => {
-                        if (topicStats[tag]) {
-                            topicStats[tag].problems.push({
-                                contestId: sub.problem.contestId,
-                                index: sub.problem.index,
-                                name: sub.problem.name,
-                                rating: sub.problem.rating,
-                                url: `https://codeforces.com/problemset/problem/${sub.problem.contestId}/${sub.problem.index}`
-                            });
-                        }
-                    });
-                }
-            }
-        });
+
 
         Object.keys(topicStats).forEach(t => {
             const s = topicStats[t];
@@ -572,14 +553,7 @@
         ALL_TOPICS.forEach(topic => {
             const topicData = stats.topicStats[topic];
             if (topicData && topicData.solved > 0) {
-                solvedTopics.push({ 
-                    name: topic, 
-                    solved: topicData.solved, 
-                    total: topicData.problemCount, 
-                    accuracy: topicData.accuracy, 
-                    attempted: topicData.attempted,
-                    problems: topicData.problems || [] // Include problems data
-                });
+                solvedTopics.push({ name: topic, solved: topicData.solved, total: topicData.problemCount, accuracy: topicData.accuracy, attempted: topicData.attempted });
             } else {
                 unsolvedTopics.push(topic);
             }
@@ -625,15 +599,8 @@
                     <div class="cf-stat"><span class="cf-stat-label">Accuracy:</span><span class="cf-stat-value">${topic.accuracy}%</span></div>
                 </div>
                 <div class="cf-progress-bar"><div class="cf-progress-fill" style="width: 0%; animation-delay: ${index * 50 + 300}ms"></div></div>
-                ${topic.problems && topic.problems.length > 0 ? '<div class="cf-click-hint">📋 Click to view problems</div>' : ''}
             `;
-            topicCard.addEventListener('click', () => {
-                if (topic.problems && topic.problems.length > 0) {
-                    showSolvedProblemsDetails(topic.name, topic.problems, 'topic');
-                } else {
-                    showTopicDetails(topic.name);
-                }
-            });
+            topicCard.addEventListener('click', () => showTopicDetails(topic.name));
             container.appendChild(topicCard);
             setTimeout(() => { topicCard.querySelector('.cf-progress-fill').style.width = `${percentage}%`; }, index * 50 + 500);
         });
@@ -1076,8 +1043,41 @@
         
         const summary = document.createElement('div');
         summary.className = 'cf-summary';
-        summary.innerHTML = `<div class="cf-summary-item"><span class="cf-label">Problems Solved this month:</span><span class="cf-value">${stats.totalSolved}</span></div>`;
+        summary.innerHTML = `<div class="cf-summary-item cf-clickable-summary"><span class="cf-label">Problems Solved this month:</span><span class="cf-value">${stats.totalSolved}</span><div class="cf-click-hint">📋 Click to view all problems</div></div>`;
         container.appendChild(summary);
+        
+        // Make summary clickable to show all problems
+        const summaryItem = summary.querySelector('.cf-summary-item');
+        if (summaryItem) {
+            summaryItem.addEventListener('click', () => {
+                // Collect all problems from all topics and ratings
+                const allProblems = [];
+                Object.values(stats.topicStats).forEach(topicData => {
+                    if (topicData.problems) {
+                        allProblems.push(...topicData.problems);
+                    }
+                });
+                Object.values(stats.ratingStats).forEach(ratingData => {
+                    if (ratingData.problems) {
+                        allProblems.push(...ratingData.problems);
+                    }
+                });
+                
+                // Remove duplicates based on contest ID and index
+                const uniqueProblems = [];
+                const seen = new Set();
+                allProblems.forEach(problem => {
+                    const key = `${problem.contestId}-${problem.index}`;
+                    if (!seen.has(key)) {
+                        seen.add(key);
+                        uniqueProblems.push(problem);
+                    }
+                });
+                
+                showSolvedProblemsDetails('All Problems', uniqueProblems, 'month');
+            });
+            summaryItem.style.cursor = 'pointer';
+        }
 
 
 

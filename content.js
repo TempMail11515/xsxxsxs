@@ -442,7 +442,7 @@
         const solvedProblems = new Set();
         
         ALL_TOPICS.forEach(topic => {
-            topicStats[topic] = { attempted: 0, solved: 0, firstAttemptSolved: 0, accuracy: 0, problemCount: TOPIC_PROBLEM_COUNTS[topic] || 0 };
+            topicStats[topic] = { attempted: 0, solved: 0, firstAttemptSolved: 0, accuracy: 0, problemCount: TOPIC_PROBLEM_COUNTS[topic] || 0, problems: [] };
         });
 
         if (!submissions || submissions.length === 0) {
@@ -470,6 +470,27 @@
                     }
                 }
             });
+        });
+
+        // Store problem details for solved problems
+        submissions.forEach(sub => {
+            if (sub.verdict === 'OK') {
+                const key = `${sub.problem.contestId}-${sub.problem.index}`;
+                if (!solvedProblems.has(key)) {
+                    solvedProblems.add(key);
+                    (sub.problem.tags || []).forEach(tag => {
+                        if (topicStats[tag]) {
+                            topicStats[tag].problems.push({
+                                contestId: sub.problem.contestId,
+                                index: sub.problem.index,
+                                name: sub.problem.name,
+                                rating: sub.problem.rating,
+                                url: `https://codeforces.com/problemset/problem/${sub.problem.contestId}/${sub.problem.index}`
+                            });
+                        }
+                    });
+                }
+            }
         });
 
         Object.keys(topicStats).forEach(t => {
@@ -551,7 +572,14 @@
         ALL_TOPICS.forEach(topic => {
             const topicData = stats.topicStats[topic];
             if (topicData && topicData.solved > 0) {
-                solvedTopics.push({ name: topic, solved: topicData.solved, total: topicData.problemCount, accuracy: topicData.accuracy, attempted: topicData.attempted });
+                solvedTopics.push({ 
+                    name: topic, 
+                    solved: topicData.solved, 
+                    total: topicData.problemCount, 
+                    accuracy: topicData.accuracy, 
+                    attempted: topicData.attempted,
+                    problems: topicData.problems || [] // Include problems data
+                });
             } else {
                 unsolvedTopics.push(topic);
             }
@@ -597,8 +625,15 @@
                     <div class="cf-stat"><span class="cf-stat-label">Accuracy:</span><span class="cf-stat-value">${topic.accuracy}%</span></div>
                 </div>
                 <div class="cf-progress-bar"><div class="cf-progress-fill" style="width: 0%; animation-delay: ${index * 50 + 300}ms"></div></div>
+                ${topic.problems && topic.problems.length > 0 ? '<div class="cf-click-hint">📋 Click to view problems</div>' : ''}
             `;
-            topicCard.addEventListener('click', () => showTopicDetails(topic.name));
+            topicCard.addEventListener('click', () => {
+                if (topic.problems && topic.problems.length > 0) {
+                    showSolvedProblemsDetails(topic.name, topic.problems, 'topic');
+                } else {
+                    showTopicDetails(topic.name);
+                }
+            });
             container.appendChild(topicCard);
             setTimeout(() => { topicCard.querySelector('.cf-progress-fill').style.width = `${percentage}%`; }, index * 50 + 500);
         });

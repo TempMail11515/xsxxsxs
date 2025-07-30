@@ -741,6 +741,16 @@
     transform: translate(-50%, -50%) scale(1.05);
 }
 
+.cf-topic-card .cf-click-hint {
+    position: static;
+    text-align: center;
+    margin-top: 8px;
+    font-size: 12px;
+    color: #667eea;
+    font-weight: 500;
+    opacity: 1;
+}
+
 /* Problems Popup Styles */
 .cf-problems-popup-content {
     max-width: 600px;

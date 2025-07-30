@@ -620,7 +620,8 @@
             tag.className = 'cf-unsolved-tag';
             tag.textContent = topic;
             tag.style.animationDelay = `${index * 30}ms`;
-            tag.addEventListener('click', () => showUnsolvedTopicInfo(topic));
+            tag.addEventListener('click', () => showUnsolvedTopicDetails(topic));
+            tag.style.cursor = 'pointer';
             tagsContainer.appendChild(tag);
         });
         container.appendChild(tagsContainer);
@@ -758,6 +759,64 @@
     
     // Also make createTopicDetailsModal globally accessible
     window.createTopicDetailsModal = createTopicDetailsModal;
+
+    function showUnsolvedTopicDetails(topic) {
+        // Get topic data from current stats
+        const currentStats = window.currentAnalyticsStats;
+        if (!currentStats) {
+            return;
+        }
+        
+        const topicData = currentStats.topicStats[topic] || { solved: 0, problemCount: TOPIC_PROBLEM_COUNTS[topic] || 0, attempted: 0, accuracy: 0 };
+        const user = getCurrentPageUser();
+        
+        // Create detailed statistics modal for unsolved topic
+        const content = document.createElement('div');
+        content.className = 'cf-topic-details-content';
+        
+        // Calculate statistics
+        const problemsSolved = topicData.solved;
+        const totalProblems = topicData.problemCount;
+        const completionRate = totalProblems > 0 ? Math.round((problemsSolved / totalProblems) * 100) : 0;
+        const accuracy = topicData.accuracy;
+        const problemsAttempted = topicData.attempted;
+        
+        content.innerHTML = `
+            <div class="cf-topic-details-stats">
+                <div class="cf-topic-stat-item">
+                    <span class="cf-topic-stat-label">Problems Solved:</span>
+                    <span class="cf-topic-stat-value">${problemsSolved} / ${totalProblems}</span>
+                </div>
+                <div class="cf-topic-stat-item">
+                    <span class="cf-topic-stat-label">Completion Rate:</span>
+                    <span class="cf-topic-stat-value">${completionRate}%</span>
+                </div>
+                <div class="cf-topic-stat-item">
+                    <span class="cf-topic-stat-label">Accuracy:</span>
+                    <span class="cf-topic-stat-value">${accuracy}%</span>
+                </div>
+                <div class="cf-topic-stat-item">
+                    <span class="cf-topic-stat-label">Problems Attempted:</span>
+                    <span class="cf-topic-stat-value">${problemsAttempted}</span>
+                </div>
+            </div>
+            <div class="cf-topic-details-actions">
+                <button class="cf-topic-close-btn" id="cf-topic-close-btn">Close</button>
+            </div>
+        `;
+        
+        // Create topic details modal over the analytics modal
+        const topicModal = createTopicDetailsModal(`📊 ${topic} - Detailed Statistics`, content);
+        document.body.appendChild(topicModal);
+        
+        // Add event listener after modal is added to DOM
+        const closeBtn = document.getElementById('cf-topic-close-btn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                closeTopicDetails();
+            });
+        }
+    }
 
     function showUnsolvedTopicInfo(topic) {
         // This function is correct and doesn't need changes.

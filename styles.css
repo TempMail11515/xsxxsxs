@@ -968,8 +968,8 @@
 
 /* Enhanced overlay for topic details */
 .cf-modal-overlay {
-    background: rgba(0, 0, 0, 0.8) !important;
-    backdrop-filter: blur(8px);
+    background: rgba(0, 0, 0, 0.5) !important;
+    backdrop-filter: blur(3px);
 }
 
 /* Compact header for topic details */
